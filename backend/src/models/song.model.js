@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     },
 
     albumId:{
-        types:mongoose.Schema.Types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
         ref: "Album",
         required:false
     }

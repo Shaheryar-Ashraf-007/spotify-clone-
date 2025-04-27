@@ -10,6 +10,7 @@ import statRoutes from "./routes/stat.route.js";
 import { connectDB } from "./lib/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import fileUpload from "express-fileupload";
+import path from "path";
 
 dotenv.config();
 const app = express();
