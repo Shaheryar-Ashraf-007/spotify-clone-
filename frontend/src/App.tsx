@@ -1,10 +1,31 @@
-import { Button } from "./components/ui/button"
+import { Route, Routes } from "react-router-dom"
+import HomePage from "./pages/home/HomePage"
+import AuthCallbackPage from "./pages/auth-callback/AuthCallbackPage"
+import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react"
+import MainLayout from "./layout/MainLayout"
+import ChatPage from "./pages/chat/ChatPage"
 
 function App() {
+
   return (
     <>
-     <h1 className="bg-black text-white text-center">hello</h1>
-     <Button variant={"outline"}>THIS IS A BUTTON </Button>
+    <Routes>
+      <Route path="/sso-callback"element = {<AuthenticateWithRedirectCallback signUpForceRedirectUrl= {"/auth-callback"}/>}/> 
+
+
+      
+      <Route path="/auth-callback"element = {<AuthCallbackPage/>}/> 
+
+      <Route element={<MainLayout/>} >
+
+      <Route path="/"element = {<HomePage/>}/> 
+      <Route path="/chat"element = {<ChatPage/>}/> 
+
+
+      </Route>
+
+
+    </Routes>
     </>
   )
 }
