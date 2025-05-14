@@ -28,7 +28,7 @@ export const FriendsActivity = () => {
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-4">
                     {users.map((user) => {
-                        const isPlaying =true ; // Replace with your logic to determine if the user is playing music
+                        const isPlaying = true; 
                         
                         return (
                             <div className="cursor-pointer hover:bg-zinc-800/50 rounded-md transition-colors group" key={user._id}>
