@@ -25,6 +25,9 @@ export const getFeaturedSongs = async (req, res) => {
         },
       },
     ]);
+
+    // Send the fetched songs as a response
+    res.status(200).json({ songs }); // Include the songs in the response
   } catch (error) {
     console.error("Error fetching featured songs:", error);
     res.status(500).json({ message: "Internal server error" });
