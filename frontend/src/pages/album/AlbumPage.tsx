@@ -3,19 +3,20 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Clock, Play } from "lucide-react";
-
+import { Clock, Pause, Play } from "lucide-react";
+import usePlayerStore from "@/stores/usePlayerStore";
 
 const AlbumPage = () => {
   const { albumId } = useParams(); // Get the album ID from URL
   const { fetchAlbumById, currentAlbum, isLoading } = useMusicApp();
-  
-  const formatDuration = (seconds: number) => {
-	const minutes = Math.floor(seconds / 60);
-	const remainingSeconds = seconds % 60;
-	return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-};
 
+  const { currentSong, isPlaying, playAlbum, togglePlay } = usePlayerStore();
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     if (albumId) {
@@ -23,6 +24,22 @@ const AlbumPage = () => {
       fetchAlbumById(albumId); // Fetch album by the dynamic ID
     }
   }, [fetchAlbumById, albumId]);
+
+  const handlePlayAlbum = () => {
+		if (!currentAlbum) return;
+
+		const isCurrentAlbumPlaying = currentAlbum?.songs.some((song) => song._id === currentSong?._id);
+		if (isCurrentAlbumPlaying) togglePlay();
+		else {
+			playAlbum(currentAlbum?.songs, 0);
+		}
+	};
+
+  const handlePlaySong = (index = number) => {
+    if (!currentAlbum) return;
+
+    playAlbum(currentAlbum?.songs, index);
+  };
 
   if (isLoading) return <div>Loading...</div>;
   if (!currentAlbum) return <div>No album data available.</div>;
@@ -47,9 +64,13 @@ const AlbumPage = () => {
               />
               <div className="flex flex-col justify-end">
                 <p className="text-sm font-medium">Album</p>
-                <h1 className="text-7xl font-bold my-4">{currentAlbum?.title}</h1>
+                <h1 className="text-7xl font-bold my-4">
+                  {currentAlbum?.title}
+                </h1>
                 <div className="flex items-center gap-2 text-sm text-zinc-100">
-                  <span className="font-medium text-white">• {currentAlbum?.artist}</span>
+                  <span className="font-medium text-white">
+                    • {currentAlbum?.artist}
+                  </span>
                   <span>• {currentAlbum?.songs.length} Songs</span>
                   <span>• {currentAlbum?.releaseYear}</span>
                 </div>
@@ -59,10 +80,15 @@ const AlbumPage = () => {
             {/* Play Button */}
             <div className="h-full w-7 text-black">
               <Button
+              onClick={handlePlayAlbum}
                 size="icon"
                 className="w-14 h-14 m-12 rounded-full bg-green-500 hover:bg-green-400 hover:scale-105 transition-all"
               >
-                <Play className="h-7 w-7 text-black" />
+                {isPlaying && currentAlbum?.songs.some((song) => song._id === currentSong?._id) ? (
+									<Pause className='h-7 w-7 text-black' />
+								) : (
+									<Play className='h-7 w-7 text-black' />
+								)}
               </Button>
             </div>
 
@@ -79,50 +105,64 @@ const AlbumPage = () => {
 
               {/* Songs List */}
               {/* Songs List */}
-<div className="px-6">
-  <div className="space-y-2 py-4">
-    {currentAlbum.songs.map((song, index) => {
+              <div className="px-6">
+                <div className="space-y-2 py-4">
+                  {currentAlbum.songs.map((song, index) => {
+                    const isCurrentSong = currentSong?._id === song._id;
 
-      return (
-        <div
-          key={song._id}
-          className="grid grid-cols-[40px_4fr_2fr_1fr] gap-4 px-4 py-2 text-sm text-zinc-400 hover:bg-white/5 rounded-md group cursor-pointer"
-        >
-          {/* Index with Play Icon on Hover */}
-          <div className="flex items-center justify-start group-hover:text-green-500">
-            <span className="hidden group-hover:block">
-              <Play className="h-4 w-4" />
-            </span>
-            <span className="block group-hover:hidden">{index + 1}</span>
-          </div>
+                    return (
+                      <div
+                        key={song._id}
+                        onClick={() => handlePlaySong(index)}
+                        className="grid grid-cols-[40px_4fr_2fr_1fr] gap-4 px-4 py-2 text-sm text-zinc-400 hover:bg-white/5 rounded-md group cursor-pointer"
+                      >
+                        {/* Index with Play Icon on Hover */}
+                        <div className="flex items-center justify-start group-hover:text-green-500">
+                          <span className="hidden group-hover:block">
+                          </span>
+                          {isCurrentSong && isPlaying ? (
+                            <div className="size-4 text-green-500">♫</div>
+                          ) : (
+                            <span className="group-hover:hidden">
+                              {index + 1}
+                            </span>
+                          )}
+                          {!isCurrentSong && (
+                            <Play className="h-4 w-4 hidden group-hover:block" />
+                          )}
+                        </div>
 
-          {/* Song Info */}
-          <div className="flex items-center gap-3">
-            <img
-              src={song.imageUrl}
-              alt={song.title}
-              className="size-10 rounded"
-            />
-            <div className="font-medium text-white">
-              <div>{song.title}</div>
-              <div className="text-xs text-zinc-400">{song.artist}</div>
-            </div>
-          </div>
+                        {/* Song Info */}
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={song.imageUrl}
+                            alt={song.title}
+                            className="size-10 rounded"
+                          />
+                          <div className="font-medium text-white">
+                            <div>{song.title}</div>
+                            <div className="text-xs text-zinc-400">
+                              {song.artist}
+                            </div>
+                          </div>
+                        </div>
 
-          {/* Release Date */}
-          <div className="flex items-center">
-            {song.createdAt ? new Date(song.createdAt).toLocaleDateString() : "—"}
-          </div>
+                        {/* Release Date */}
+                        <div className="flex items-center">
+                          {song.createdAt
+                            ? new Date(song.createdAt).toLocaleDateString()
+                            : "—"}
+                        </div>
 
-          {/* Duration */}
-          <div className="flex items-center">
-            {formatDuration(song.duration)}
-          </div>
-        </div>
-      );
-    })}
-  </div>
-</div>
+                        {/* Duration */}
+                        <div className="flex items-center">
+                          {formatDuration(song.duration)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>

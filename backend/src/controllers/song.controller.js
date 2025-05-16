@@ -34,7 +34,31 @@ export const getFeaturedSongs = async (req, res) => {
   }
 };
 
-export const madeForYou = async (req, res) => {
+export const madeForYou = async (req, res, next) => {
+  try {
+    const songs = await Song.aggregate([
+      {
+        $sample: { size: 4 },
+      },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          artist: 1,
+          imageUrl: 1,
+          audioUrl: 1,
+        },
+      },
+    ]);
+
+    
+    res.json({ title: 'Made For You', songs });
+  } catch (error) {
+    next(error); 
+  }
+};
+
+export const getTrendingSong = async (req, res) => {
   try {
     const songs = await Song.aggregate([
       {
@@ -53,30 +77,7 @@ export const madeForYou = async (req, res) => {
 
     res.json(songs);
   } catch (error) {
-    next(error);
-  }
-};
-
-export const getTrendingSong = async (req, res) => {
-  try {
-    const songs = await Song.aggregate(
-      {
-        $sample: { size: 6 },
-      },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          artist: 1,
-          imageUrl: 1,
-          audioUrl: 1,
-        },
-      }
-    );
-
-    res.json(songs)
-  } catch (error) {
-    console.error("Error fetching featured songs:", error);
+    console.error("Error fetching trending songs:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -96,8 +96,37 @@ export const useMusicApp = create<MusicStore>((set) => ({
     }
 },
   fetchMadeForYouSongs: async () => {
+    set({ isLoading: true, error: null });
+
+    try {
+        const response = await axiosinstance.get('/songs/made-for-you');
+        console.log("Made For You Songs Response:", response.data); 
+
+        if (Array.isArray(response.data.songs)) {
+            set({ madeForYouSongs: response.data.songs });
+        } else {
+            console.error("Expected an array but got:", response.data.songs);
+            set({ madeForYouSongs: [] });
+        }
+    } catch (error: any) {
+        set({ error: error.response?.data?.message || "An error occurred" });
+        console.error("Fetch error:", error);
+    } finally {
+        set({ isLoading: false });
+    }
+
   },
 
   fetchTrendingSongs: async () => {
+     set({ isLoading: true, error: null });
+        try {
+          const response = await axiosinstance.get("/songs/trending");
+          set({ trendingSongs: response.data });
+        } catch (error: any) {
+          set({ error: error.response.data.message });
+        } finally {
+          set({ isLoading: false });
+        }
+    
   },
 }));
