@@ -7,7 +7,7 @@ import SectionGrid from './components/SectionGrid'
 
 const HomePage = () => {
 
-  const {fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs, isLoading, madeForYouSongs, trendingSongs, featuredSongs} = useMusicApp()
+  const {fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs, isLoading, madeForYouSongs, trendingSongs} = useMusicApp()
 
   useEffect(()=>{
     fetchFeaturedSongs();

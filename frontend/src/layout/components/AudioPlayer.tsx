@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 const AudioPlayer = () => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const prevSongRef = useRef<string | null>(null);
-
     const { currentSong, isPlaying, playNext } = usePlayerStore();
 
     // Handle play/pause based on isPlaying state
@@ -16,6 +15,7 @@ const AudioPlayer = () => {
                 if (playPromise) {
                     playPromise.catch(error => {
                         console.error("Playback failed:", error);
+                        // Optionally inform the user here
                     });
                 }
             } else {
@@ -27,7 +27,6 @@ const AudioPlayer = () => {
     // Handle the end of the song
     useEffect(() => {
         const audio = audioRef.current;
-
         const handleEnded = () => {
             playNext();
         };
@@ -51,14 +50,19 @@ const AudioPlayer = () => {
         const isSongChanged = prevSongRef.current !== currentSong.audioUrl;
 
         if (isSongChanged) {
-            audio.src = currentSong.audioUrl; 
+            audio.src = currentSong.audioUrl;
             audio.currentTime = 0; 
-            prevSongRef.current = currentSong.audioUrl; // Update the previous song reference
+            prevSongRef.current = currentSong.audioUrl;
 
+            // Load the new audio source
+            audio.load();
+
+            // Handle play attempt after loading
             const playPromise = audio.play();
             if (playPromise) {
                 playPromise.catch(error => {
                     console.error("Playback failed:", error);
+                    // Inform the user about the autoplay restriction
                 });
             }
         }

@@ -1,5 +1,5 @@
 import { axiosinstance } from "@/lib/axios"; 
-import { Album, Song } from "@/types";
+import { Album, Song, Stats } from "@/types";
 import { create } from "zustand";
 
 // Define the structure of the music store
@@ -12,12 +12,15 @@ interface MusicStore {
   featuredSongs: Song[];
   madeForYouSongs: Song[];
   trendingSongs: Song[];
+  stats: Stats
 
   fetchAlbums: () => Promise<void>;
   fetchAlbumById: (id: string) => Promise<void>;
   fetchFeaturedSongs: () => Promise<void>;
   fetchMadeForYouSongs: () => Promise<void>;
   fetchTrendingSongs: () => Promise<void>;
+  fetchSongs: () => Promise<void>;
+  fetchStats: () => Promise<void>;
 }
 
 export const useMusicApp = create<MusicStore>((set) => ({
@@ -29,6 +32,14 @@ export const useMusicApp = create<MusicStore>((set) => ({
   featuredSongs: [], 
   madeForYouSongs: [], 
   trendingSongs: [], 
+
+  stats:{
+    totalSongs:0,
+    totalAlbums:0,
+    totalArtists:0,
+    totalUsers:0
+  },
+  
 
   fetchAlbums: async () => {
     set({ isLoading: true, error: null });
@@ -50,6 +61,7 @@ export const useMusicApp = create<MusicStore>((set) => ({
       set({ isLoading: false });
     }
   },
+
 
   fetchAlbumById: async (id) => {
     set({ isLoading: true, error: null });
@@ -129,4 +141,32 @@ export const useMusicApp = create<MusicStore>((set) => ({
         }
     
   },
+
+  fetchSongs: async () =>{
+
+    set({ isLoading: true, error: null });
+        try {
+          const response = await axiosinstance.get("/songs");
+          set({ trendingSongs: response.data });
+        } catch (error: any) {
+          set({ error: error.response.data.message });
+        } finally {
+          set({ isLoading: false });
+        }
+    
+  },
+
+  fetchStats: async () =>{
+
+    set({ isLoading: true, error: null });
+        try {
+          const response = await axiosinstance.get("/stats");
+          set({ trendingSongs: response.data });
+        } catch (error: any) {
+          set({ error: error.response.data.message });
+        } finally {
+          set({ isLoading: false });
+        }
+
+  }
 }));

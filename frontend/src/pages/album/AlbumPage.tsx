@@ -26,14 +26,16 @@ const AlbumPage = () => {
   }, [fetchAlbumById, albumId]);
 
   const handlePlayAlbum = () => {
-		if (!currentAlbum) return;
+    if (!currentAlbum) return;
 
-		const isCurrentAlbumPlaying = currentAlbum?.songs.some((song) => song._id === currentSong?._id);
-		if (isCurrentAlbumPlaying) togglePlay();
-		else {
-			playAlbum(currentAlbum?.songs, 0);
-		}
-	};
+    const isCurrentAlbumPlaying = currentAlbum?.songs.some(
+      (song) => song._id === currentSong?._id
+    );
+    if (isCurrentAlbumPlaying) togglePlay();
+    else {
+      playAlbum(currentAlbum?.songs, 0);
+    }
+  };
 
   const handlePlaySong = (index = number) => {
     if (!currentAlbum) return;
@@ -80,15 +82,18 @@ const AlbumPage = () => {
             {/* Play Button */}
             <div className="h-full w-7 text-black">
               <Button
-              onClick={handlePlayAlbum}
+                onClick={handlePlayAlbum}
                 size="icon"
                 className="w-14 h-14 m-12 rounded-full bg-green-500 hover:bg-green-400 hover:scale-105 transition-all"
               >
-                {isPlaying && currentAlbum?.songs.some((song) => song._id === currentSong?._id) ? (
-									<Pause className='h-7 w-7 text-black' />
-								) : (
-									<Play className='h-7 w-7 text-black' />
-								)}
+                {isPlaying &&
+                currentAlbum?.songs.some(
+                  (song) => song._id === currentSong?._id
+                ) ? (
+                  <Pause className="h-7 w-7 text-black" />
+                ) : (
+                  <Play className="h-7 w-7 text-black" />
+                )}
               </Button>
             </div>
 
@@ -118,8 +123,7 @@ const AlbumPage = () => {
                       >
                         {/* Index with Play Icon on Hover */}
                         <div className="flex items-center justify-start group-hover:text-green-500">
-                          <span className="hidden group-hover:block">
-                          </span>
+                          <span className="hidden group-hover:block"></span>
                           {isCurrentSong && isPlaying ? (
                             <div className="size-4 text-green-500">♫</div>
                           ) : (
