@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Music } from "lucide-react"
 import SongTable from "./SongTable"
+import AddSongDialog from "./AddSongDialog"
 
 const SongTabContent = () => {
   return (
@@ -20,9 +20,7 @@ const SongTabContent = () => {
                     </CardDescription>
                 </div>
 
-                <Button className="bg-green-500 hover:bg-green-700 text-black rounded-full transition-colors">
-                    + Add New Song
-                </Button>
+                <AddSongDialog/>
             </div>
         </CardHeader>
         <CardContent>
