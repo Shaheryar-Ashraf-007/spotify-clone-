@@ -6,8 +6,8 @@ const router = Router();
 
 router.use(protectRoute, requiredAdmin)
 router.get("/check", checkAdmin);
-router.post("/songs", createSong);
-router.delete("/songs/:id", deleteSong);
+router.post("/song", createSong);
+router.delete("/song/:id", deleteSong);
 router.post("/albums", createAlbum);
 router.delete("/albums/:id", deleteAlbum); 
 

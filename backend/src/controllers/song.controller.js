@@ -9,6 +9,8 @@ export const getAllSongs = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 export const getFeaturedSongs = async (req, res) => {
   try {
     const songs = await Song.aggregate([
@@ -32,6 +34,22 @@ export const getFeaturedSongs = async (req, res) => {
     console.error("Error fetching featured songs:", error);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+export const deleteSong = async (req, res) => {
+    try {
+        const { id } = req.params; // Get the song ID from the request parameters
+        const result = await Song.findByIdAndDelete(id); // Delete the song
+
+        if (!result) {
+            return res.status(404).json({ message: "Song not found" }); // Handle not found
+        }
+
+        res.status(200).json({ message: "Song deleted successfully" }); // Success response
+    } catch (error) {
+        console.error("Error deleting song:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
 
 export const madeForYou = async (req, res, next) => {

@@ -1,10 +1,12 @@
-import { clerkClient } from "@clerk/express";
+import { clerkClient, getAuth } from "@clerk/express";
 
 // Protect routes: allow only logged-in users
 export const protectRoute = (req, res, next) => {
-  if (!req.auth?.userId) {
+  const auth = getAuth(req);     // 👈 Extract Clerk token info
+  if (!auth.userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+  req.auth = auth;               // 👈 Attach it for later middleware
   next();
 };
 
