@@ -247,7 +247,7 @@ const handleSubmit = async () => {
 						</div>
 
 						<div className='space-y-3'>
-							<label className='flex items-center gap-2 text-sm font-medium text-zinc-300'>
+							<label className='flex items-center gap-2 text-sm font-medium hover:bg-green-500 text-zinc-300'>
 								<Album className='h-4 w-4' />
 								Album (Optional)
 							</label>
@@ -263,7 +263,7 @@ const handleSubmit = async () => {
 										No Album (Single)
 									</SelectItem>
 									{albums.map((album) => (
-										<SelectItem key={album._id} value={album._id} className='text-white hover:bg-zinc-700'>
+										<SelectItem key={album._id} value={album._id} className='text-white hover:bg-green-700'>
 											{album.title}
 										</SelectItem>
 									))}

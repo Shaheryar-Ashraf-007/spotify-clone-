@@ -245,7 +245,7 @@ export const PlaybackControls = () => {
 
 					<div className='hidden sm:flex items-center gap-2 w-full'>
 						<div className='text-xs text-zinc-400'>{formatTime(currentTime)}</div>
-						<div className='w-full relative'>
+						<div className='w-full relative '>
 							<div
 								className='absolute h-1 bg-green-500 rounded-full z-0'
 								style={{ width: `${progressPercentage}%` }}
@@ -254,9 +254,10 @@ export const PlaybackControls = () => {
 								value={[currentTime]}
 								max={duration || 100}
 								step={1}
+								
 								className='w-full z-10 hover:cursor-grab active:cursor-grabbing'
 								onValueChange={handleSeek}
-							/>
+/>
 						</div>
 						<div className='text-xs text-zinc-400'>{formatTime(duration)}</div>
 					</div>

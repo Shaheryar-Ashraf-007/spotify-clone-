@@ -93,6 +93,8 @@ export const useMusicApp = create<MusicStore>((set) => ({
     try {
       const response = await axiosinstance.get('/albums');
       console.log("API Response:", response.data); 
+      set({ songs: Array.isArray(response.data.songs) ? response.data.songs : [] });
+
 
       if (Array.isArray(response.data.albums)) {
         set({ albums: response.data.albums });

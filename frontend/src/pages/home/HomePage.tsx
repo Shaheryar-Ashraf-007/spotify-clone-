@@ -18,7 +18,7 @@ const HomePage = () => {
 
   console.log({isLoading, fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs})
   return (
-    <div className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-800 to-zinc-900 mr-2'>
+    <div className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-800 to-zinc-900'>
         <Topbar/>
         <ScrollArea className='h-[calc(100vh-180px)]'>
           <div className="p-4 sm:p-6">

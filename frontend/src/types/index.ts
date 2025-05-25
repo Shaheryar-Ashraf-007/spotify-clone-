@@ -12,7 +12,6 @@ export interface Song{
 
 }
 
-
 export interface Album{
     _id: string,
     title:string,

@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.slider-knob {
+    border: 2px solid #9CA3AF; /* Tailwind's gray-400 */
+    background-color: white; /* Adjust as needed */
+}
