@@ -1,4 +1,4 @@
-import { ChatStore } from "@/stores/useChatStore";
+import { useChatStore } from "@/stores/useChatStore";
 import { useUser } from "@clerk/clerk-react";
 import { HeadphonesIcon, MusicIcon, Users } from "lucide-react";
 import { useEffect } from "react";
@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
 import { AvatarImage } from "@/components/ui/avatar";
 
 export const FriendsActivity = () => {
-    const { users, isLoading, error, fetchUsers } = ChatStore();
+    const { users, userActivities, fetchUsers } = useChatStore();
     const { user } = useUser();
 
     // Fetch users when the component mounts (optional)
@@ -20,16 +20,17 @@ export const FriendsActivity = () => {
             <div className="p-4 flex justify-between items-center border-b border-zinc-800">
                 <div className="flex items-center gap-2">
                     <Users className="size-5 shrink-0" />
-                    <h2 className="font-semibold">What they are Listening</h2>
+                    <h2 className="font-semibold">What They Are Listening</h2>
                 </div>
             </div>
-            {!users && <LoginPrompt />}
+            {users.length === 0 && <LoginPrompt />}
 
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-4">
                     {users.map((user) => {
-                        const isPlaying = true; 
-                        
+                        const activity = userActivities.get(user.clerkId);
+                        const isPlaying = activity && activity !== "Idle";
+
                         return (
                             <div className="cursor-pointer hover:bg-zinc-800/50 rounded-md transition-colors group" key={user._id}>
                                 <div className="flex items-start gap-3">
@@ -51,8 +52,12 @@ export const FriendsActivity = () => {
                                         </div>
                                         {isPlaying ? (
                                             <div className="mt-1">
-                                                <div className="mt-1 text-sm text-white font-medium truncate">Carding</div>
-                                                <div className="text-xs text-zinc-400">by Taylor Swift</div>
+                                                <div className="mt-1 text-sm text-white font-medium truncate">
+                                                    {activity.replace("Playing ", "").split(" by ")[0]}
+                                                </div>
+                                                <div className="text-xs text-zinc-400">
+                                                    {activity.split(" by ")[1]}
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="mt-1 text-xs text-zinc-400">Idle</div>
