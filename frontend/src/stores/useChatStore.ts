@@ -1,135 +1,143 @@
-import { Message, User } from "@/types";
 import { create } from "zustand";
 import { io } from "socket.io-client";
 import { axiosinstance } from "@/lib/axios";
 
-interface ChatStore {
-	users: User[];
-	isLoading: boolean;
-	error: string | null;
-	socket: ;
-	isConnected: boolean;
-	onlineUsers: Set<string>;
-	userActivities: Map<string, string>;
-	messages: Message[];
-	selectedUser: User | null;
+const baseURL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5000"
+    : "/";
 
-	fetchUsers: () => Promise<void>;
-	initSocket: (userId: string) => void;
-	disconnectSocket: () => void;
-	sendMessage: (receiverId: string, senderId: string, content: string) => void;
-	fetchMessages: (userId: string) => Promise<void>;
-	setSelectedUser: (user: User | null) => void;
-}
+export const useChatStore = create((set, get) => ({
+  users: [],
+  isLoading: false,
+  error: null,
 
-const baseURL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+  socket: null,
+  isConnected: false,
 
-const socket = io(baseURL, {
-	autoConnect: false,
-	withCredentials: true,
-});
+  onlineUsers: new Set(),
+  userActivities: new Map(),
 
-export const useChatStore = create<ChatStore>((set, get) => ({
-	users: [],
-	isLoading: false,
-	error: null,
-	socket: socket,
-	isConnected: false,
-	onlineUsers: new Set(),
-	userActivities: new Map(),
-	messages: [],
-	selectedUser: null,
+  messages: [],
+  selectedUser: null,
 
-	setSelectedUser: (user) => set({ selectedUser: user }),
+  // 🔹 Select user
+  setSelectedUser: (user) => set({ selectedUser: user }),
 
-	fetchUsers: async () => {
-		set({ isLoading: true, error: null });
-		try {
-			const response = await axiosinstance .get("/users");
-			set({ users: response.data });
-		} catch (error: any) {
-			set({ error: error.response.data.message });
-		} finally {
-			set({ isLoading: false });
-		}
-	},
+  // 🔹 Fetch users
+  fetchUsers: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await axiosinstance.get("/users");
+      set({ users: res.data });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Failed to fetch users" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-	initSocket: (userId) => {
-		if (!get().isConnected) {
-			socket.auth = { userId };
-			socket.connect();
+  // 🔹 INIT SOCKET (FIXED)
+  initSocket: (userId) => {
+    const existingSocket = get().socket;
+    if (existingSocket) return; // ✅ prevent multiple connections
 
-			socket.emit("user_connected", userId);
+    const socket = io(baseURL, {
+      autoConnect: false,
+      withCredentials: true,
+      auth: { userId },
+    });
 
-			socket.on("users_online", (users: string[]) => {
-				set({ onlineUsers: new Set(users) });
-			});
+    socket.connect();
 
-			socket.on("activities", (activities: [string, string][]) => {
-				set({ userActivities: new Map(activities) });
-			});
+    socket.emit("user_connected", userId);
 
-			socket.on("user_connected", (userId: string) => {
-				set((state) => ({
-					onlineUsers: new Set([...state.onlineUsers, userId]),
-				}));
-			});
+    // 🔹 online users
+    socket.on("users_online", (users) => {
+      set({ onlineUsers: new Set(users) });
+    });
 
-			socket.on("user_disconnected", (userId: string) => {
-				set((state) => {
-					const newOnlineUsers = new Set(state.onlineUsers);
-					newOnlineUsers.delete(userId);
-					return { onlineUsers: newOnlineUsers };
-				});
-			});
+    socket.on("user_connected", (id) => {
+      set((state) => ({
+        onlineUsers: new Set([...state.onlineUsers, id]),
+      }));
+    });
 
-			socket.on("receive_message", (message: Message) => {
-				set((state) => ({
-					messages: [...state.messages, message],
-				}));
-			});
+    socket.on("user_disconnected", (id) => {
+      set((state) => {
+        const updated = new Set(state.onlineUsers);
+        updated.delete(id);
+        return { onlineUsers: updated };
+      });
+    });
 
-			socket.on("message_sent", (message: Message) => {
-				set((state) => ({
-					messages: [...state.messages, message],
-				}));
-			});
+    // 🔥 ONLY ONE SOURCE OF TRUTH FOR RECEIVING MESSAGE
+    socket.on("receive_message", (message) => {
+      set((state) => ({
+        messages: [...state.messages, message],
+      }));
+    });
 
-			socket.on("activity_updated", ({ userId, activity }) => {
-				set((state) => {
-					const newActivities = new Map(state.userActivities);
-					newActivities.set(userId, activity);
-					return { userActivities: newActivities };
-				});
-			});
+    set({ socket, isConnected: true });
+  },
 
-			set({ isConnected: true });
-		}
-	},
+  // 🔹 Disconnect socket
+  disconnectSocket: () => {
+    const socket = get().socket;
+    if (socket) {
+      socket.disconnect();
+    }
 
-	disconnectSocket: () => {
-		if (get().isConnected) {
-			socket.disconnect();
-			set({ isConnected: false });
-		}
-	},
+    set({
+      socket: null,
+      isConnected: false,
+      onlineUsers: new Set(),
+      userActivities: new Map(),
+    });
+  },
 
-	sendMessage: async (receiverId, senderId, content) => {
-		const socket = get().socket;
-		if (!socket) return;
+  // 🔹 SEND MESSAGE (OPTIMISTIC UI ONLY)
+  sendMessage: (messageData) => {
+    const socket = get().socket;
+    if (!socket || !get().isConnected) return;
 
-		socket.emit("send_message", { receiverId, senderId, content });
-	},
+    const { senderId, receiverId, content } = messageData;
 
-	fetchMessages: async (userId: string) => {
-		set({ isLoading: true, error: null });
-		try {
-			const response = await axiosinstance.get(`/users/messages/${userId}`);
-			set({ messages: response.data });
-		} catch (error: any) {
-			set({ error: error.response.data.message });
-		} finally {
-			set({ isLoading: false });
-		}
-	},
+    if (!senderId || !receiverId || !content?.trim()) {
+      console.log("Invalid message:", messageData);
+      return;
+    }
+
+    // emit to backend
+    socket.emit("send_message", messageData);
+
+    // ✅ optimistic UI (ONLY PLACE message is added for sender)
+    set((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          _id: Date.now().toString(),
+          senderId,
+          receiverId,
+          content,
+          createdAt: new Date().toISOString(),
+          optimistic: true,
+        },
+      ],
+    }));
+  },
+
+  // 🔹 Fetch messages
+  fetchMessages: async (userId) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const res = await axiosinstance.get(`/users/messages/${userId}`);
+      set({ messages: res.data });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Failed to fetch messages" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 }));
