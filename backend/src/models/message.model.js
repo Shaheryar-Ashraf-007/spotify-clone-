@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         required: true,
     },
-    receivedId:{
+    receiverId:{
         type:String,
         required: true,
     },
