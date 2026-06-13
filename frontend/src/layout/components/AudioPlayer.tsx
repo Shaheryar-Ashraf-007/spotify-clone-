@@ -1,76 +1,91 @@
 import usePlayerStore from "@/stores/usePlayerStore";
+import useRoomStore from "@/stores/useRoomStore";
 import { useEffect, useRef } from "react";
 
 const AudioPlayer = () => {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const prevSongRef = useRef<string | null>(null);
-    const { currentSong, isPlaying, playNext } = usePlayerStore();
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const prevSongRef = useRef<string | null>(null);
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { currentSong, isPlaying, playNext } = usePlayerStore();
 
-    // Handle play/pause based on isPlaying state
-    useEffect(() => {
-        const audio = audioRef.current;
-        if (audio) {
-            if (isPlaying) {
-                const playPromise = audio.play();
-                if (playPromise) {
-                    playPromise.catch(error => {
-                        console.error("Playback failed:", error);
-                        // Optionally inform the user here
-                    });
-                }
-            } else {
-                audio.pause();
-            }
+  // Play / pause
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      // Cancel any pending pause emit
+      if (pauseTimerRef.current) {
+        clearTimeout(pauseTimerRef.current);
+        pauseTimerRef.current = null;
+      }
+
+      const tryPlay = () => {
+        audio.play().catch(console.error);
+        const { isHost, emitPlay } = useRoomStore.getState();
+        if (isHost && currentSong) {
+          console.log("📡 emitting play_song:", currentSong._id, "at", audio.currentTime);
+          emitPlay(currentSong._id, audio.currentTime);
         }
-    }, [isPlaying]);
+      };
 
-    // Handle the end of the song
-    useEffect(() => {
-        const audio = audioRef.current;
-        const handleEnded = () => {
-            playNext();
-        };
+      if (audio.readyState >= 3) {
+        tryPlay();
+      } else {
+        audio.addEventListener("canplay", tryPlay, { once: true });
+        return () => audio.removeEventListener("canplay", tryPlay);
+      }
+    } else {
+      audio.pause();
+      const { isHost, emitPause } = useRoomStore.getState();
+      if (isHost) {
+        // Debounce pause — wait 300ms to avoid emitting on song transitions
+        pauseTimerRef.current = setTimeout(() => {
+          emitPause(audio.currentTime);
+          console.log("📡 emitting pause at", audio.currentTime);
+        }, 300);
+      }
+    }
+  }, [isPlaying]);
 
-        if (audio) {
-            audio.addEventListener('ended', handleEnded);
-        }
+  // Song ended
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.addEventListener("ended", playNext);
+    return () => audio.removeEventListener("ended", playNext);
+  }, [playNext]);
 
-        return () => {
-            if (audio) {
-                audio.removeEventListener('ended', handleEnded);
-            }
-        };
-    }, [playNext]);
+  // Song changed
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentSong) return;
+    if (prevSongRef.current === currentSong.audioUrl) return;
 
-    // Change the audio source when the current song changes
-    useEffect(() => {
-        if (!audioRef.current || !currentSong) return;
+    // Cancel any pending pause when song changes
+    if (pauseTimerRef.current) {
+      clearTimeout(pauseTimerRef.current);
+      pauseTimerRef.current = null;
+    }
 
-        const audio = audioRef.current;
-        const isSongChanged = prevSongRef.current !== currentSong.audioUrl;
+    prevSongRef.current = currentSong.audioUrl;
+    audio.src = currentSong.audioUrl;
+    audio.load();
 
-        if (isSongChanged) {
-            audio.src = currentSong.audioUrl;
-            audio.currentTime = 0; 
-            prevSongRef.current = currentSong.audioUrl;
+    const onCanPlay = () => {
+      audio.play().catch(console.error);
+      const { isHost, emitPlay } = useRoomStore.getState();
+      if (isHost) {
+        console.log("📡 emitting play_song on song change:", currentSong._id);
+        emitPlay(currentSong._id, 0);
+      }
+    };
 
-            // Load the new audio source
-            audio.load();
+    audio.addEventListener("canplay", onCanPlay, { once: true });
+    return () => audio.removeEventListener("canplay", onCanPlay);
+  }, [currentSong]);
 
-            // Handle play attempt after loading
-            const playPromise = audio.play();
-            if (playPromise) {
-                playPromise.catch(error => {
-                    console.error("Playback failed:", error);
-                    // Inform the user about the autoplay restriction
-                });
-            }
-        }
-    }, [currentSong]);
-
-    return (
-        <audio ref={audioRef} />
-    );
+  return <audio ref={audioRef} />;
 };
 
 export default AudioPlayer;

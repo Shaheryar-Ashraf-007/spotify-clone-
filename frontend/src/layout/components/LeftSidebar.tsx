@@ -7,6 +7,7 @@ import { SignedIn } from "@clerk/clerk-react";
 import { HomeIcon, Library, MessageCircle } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import RoomControls from "./RoomControls";
 
 const LeftSidebar = () => {
   const { albums, fetchAlbums, isLoading } = useMusicApp();
@@ -49,6 +50,7 @@ const LeftSidebar = () => {
               <span className="hidden md:inline">Messages</span>
             </Link>
           </SignedIn>
+          <RoomControls/>
         </div>
       </div>
 
