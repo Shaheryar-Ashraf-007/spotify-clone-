@@ -4,7 +4,7 @@ import { protectRoute, requiredAdmin } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/",protectRoute, requiredAdmin,getAllSongs )
+router.get("/",getAllSongs )
 router.delete("/:id",protectRoute, requiredAdmin, deleteSong)
 router.get("/featured", getFeaturedSongs)
 router.get("/made-for-you", madeForYou)
