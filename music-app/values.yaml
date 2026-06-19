@@ -1,0 +1,38 @@
+frontend:
+  replicaCount: 1
+  image:
+    repository: react-app
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+
+backend:
+  replicaCount: 1
+  image:
+    repository: react-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5000
+
+ingress:
+  enabled: true
+  className: nginx
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+httpRoute:
+  enabled: false
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
