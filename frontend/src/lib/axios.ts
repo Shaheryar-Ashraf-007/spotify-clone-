@@ -1,5 +1,5 @@
 import axios from "axios";
 
 export const axiosinstance = axios.create({
-    baseURL: "http://localhost:5000/api"
+    baseURL: "http://backend-service:5000/api"
 })
